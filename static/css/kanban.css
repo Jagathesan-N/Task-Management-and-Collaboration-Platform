@@ -1,0 +1,194 @@
+/* ════════════════════════════════════════
+   KANBAN.CSS — Kanban board page styles
+════════════════════════════════════════ */
+
+/* ── Floating assignee dropdown panel (appended to body) ── */
+#floating-assignee {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    width: 220px;
+    max-height: 260px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #e4e4e7;
+    border-radius: 1rem;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+/* ════════════════════════════════════════
+   RESPONSIVE KANBAN BOARD
+════════════════════════════════════════ */
+
+
+/* ───────────────── MOBILE ───────────────── */
+/* iPhone SE, XR, 12 Pro, Pixel, Samsung */
+
+@media (max-width: 767px) {
+
+    .overflow-x-auto {
+        overflow-x: hidden !important;
+    }
+
+    .overflow-x-auto > div {
+        display: flex !important;
+        flex-direction: column !important;
+        min-width: 100% !important;
+        gap: 18px;
+    }
+
+    .kanban-column {
+        min-height: auto !important;
+        padding: 14px;
+        border-radius: 20px;
+    }
+
+    .project-card {
+        padding: 14px;
+        margin-bottom: 14px;
+        border-radius: 20px;
+    }
+
+    .project-card h4 {
+        font-size: 15px;
+        line-height: 1.4;
+    }
+
+    .project-card p {
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .avatar-row {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .avatar-row .w-8 {
+        width: 30px;
+        height: 30px;
+        font-size: 11px;
+    }
+
+    #floating-assignee {
+        width: 92vw !important;
+        left: 4vw !important;
+        max-height: 260px;
+    }
+
+    #comment-modal .relative {
+        width: 95%;
+        max-height: 90vh;
+        border-radius: 24px;
+    }
+
+    #comment-list {
+        max-height: 240px !important;
+    }
+
+    #comment-input {
+        font-size: 14px;
+    }
+
+    h2 {
+        word-break: break-word;
+    }
+}
+
+
+/* ───────────────── SMALL TABLETS ───────────────── */
+/* iPad Mini */
+
+@media (min-width: 768px) and (max-width: 834px) {
+
+    .overflow-x-auto > div {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 20px;
+        min-width: 100% !important;
+    }
+
+    .kanban-column {
+        min-height: 500px !important;
+    }
+
+    .project-card {
+        padding: 16px;
+    }
+}
+
+
+/* ───────────────── LARGE TABLETS ───────────────── */
+/* iPad Air, iPad Pro, Surface Pro */
+
+@media (min-width: 835px) and (max-width: 1199px) {
+
+    .overflow-x-auto > div {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 24px;
+        min-width: 100% !important;
+    }
+
+    .kanban-column {
+        min-height: 580px !important;
+    }
+}
+
+
+/* ───────────────── FOLD DEVICES ───────────────── */
+/* Galaxy Fold, Zenbook Fold */
+
+@media (max-width: 540px) {
+
+    .project-card {
+        padding: 12px;
+    }
+
+    .project-card h4 {
+        font-size: 14px;
+    }
+
+    .project-card p {
+        font-size: 12px;
+    }
+
+    .kanban-column {
+        padding: 12px;
+    }
+
+    .avatar-row {
+        gap: 4px;
+    }
+}
+
+
+/* ───────────────── NEST HUB / SMALL HEIGHT ───────────────── */
+
+@media (max-height: 700px) {
+
+    .kanban-column {
+        min-height: auto !important;
+    }
+
+    #comment-modal .relative {
+        max-height: 95vh;
+    }
+
+    #comment-list {
+        max-height: 180px !important;
+    }
+}
+
+
+/* ───────────────── LARGE DESKTOP SAFETY ───────────────── */
+
+@media (min-width: 1400px) {
+
+    .overflow-x-auto > div {
+        gap: 28px;
+    }
+
+    .project-card {
+        padding: 18px;
+    }
+}

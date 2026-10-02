@@ -1,0 +1,53 @@
+/* ===================================================
+   project_form.css  –  styles for the project form page
+   Place at: static/css/project_form.css
+=================================================== */
+
+/* ── Date input min constraint visual feedback ── */
+input[type="date"]:invalid {
+    border-color: #fca5a5;              /* red-300 */
+}
+
+/* ── File upload drop zone hover state (supplement to Tailwind) ── */
+.upload-zone {
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.upload-zone:hover {
+    background-color: #eff6ff;          /* blue-50 */
+}
+
+/* ── Selected file list item ── */
+.file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #eff6ff;                /* blue-50 */
+    border: 1px solid #bfdbfe;          /* blue-200 */
+    border-radius: 0.5rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.file-item span {
+    font-size: 0.75rem;
+    color: #1d4ed8;                     /* blue-700 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-item button {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #f87171;                     /* red-400 */
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-left: 0.5rem;
+    flex-shrink: 0;
+    transition: color 0.15s ease;
+}
+
+.file-item button:hover {
+    color: #dc2626;                     /* red-600 */
+}

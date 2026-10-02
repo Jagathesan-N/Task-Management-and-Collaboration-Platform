@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Calendar{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+
+<h1 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">Calendar</h1>
+
+<!-- MONTH HEADER -->
+<div class="flex justify-between items-center mb-3 sm:mb-4">
+    <button onclick="prevMonth()" class="px-2 sm:px-3 py-1 bg-zinc-200 rounded text-sm">⬅</button>
+    <h2 id="monthYear" class="font-semibold text-base sm:text-lg"></h2>
+    <button onclick="nextMonth()" class="px-2 sm:px-3 py-1 bg-zinc-200 rounded text-sm">➡</button>
+</div>
+
+<!-- DAYS HEADER -->
+<div class="grid grid-cols-7 gap-1 sm:gap-2 text-center text-xs sm:text-sm font-medium text-zinc-500 mb-1 sm:mb-2">
+    <div class="hidden sm:block">Sun</div><div class="hidden sm:block">Mon</div><div class="hidden sm:block">Tue</div>
+    <div class="hidden sm:block">Wed</div><div class="hidden sm:block">Thu</div><div class="hidden sm:block">Fri</div><div class="hidden sm:block">Sat</div>
+    <div class="sm:hidden">S</div><div class="sm:hidden">M</div><div class="sm:hidden">T</div>
+    <div class="sm:hidden">W</div><div class="sm:hidden">T</div><div class="sm:hidden">F</div><div class="sm:hidden">S</div>
+</div>
+
+<!-- CALENDAR GRID -->
+<div id="calendarGrid" class="grid grid-cols-7 gap-1 sm:gap-2"></div>
+
+<!-- Django injects due dates as a JS variable for calendar.js to consume -->
+<script>
+    const dueDates = {
+        {% for date, items in calendar_data.items %}
+            "{{ date|date:'Y-m-d' }}": [
+                {% for item in items %}
+                    { title: "{{ item.title|escapejs }}", priority: "{{ item.priority }}", type: "{{ item.type }}" },
+                {% endfor %}
+            ],
+        {% endfor %}
+    };
+</script>
+
+<script src="{% static 'js/calendar.js' %}"></script>
+
+{% endblock %}

@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chat - TaskFlow{% endblock %}
+<script>document.body.classList.add('chat-page');</script>
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/chat.css' %}">
+
+<div class="max-w-6xl mx-auto h-full">
+    <div class="bg-white rounded-3xl shadow-sm h-[calc(100vh-140px)] flex overflow-hidden">
+
+        <!-- Backdrop for mobile chat sidebar -->
+        <div id="chat-sidebar-backdrop" onclick="closeChatSidebar()"></div>
+
+        <!-- LEFT: Members Sidebar
+             NOTE: w-64 removed — width is now fully controlled by chat.css
+             using clamp() so it shrinks fluidly as the viewport narrows,
+             giving more space to the chat column (flex-1) automatically. -->
+        <div id="chat-sidebar" class="hidden md:flex border-r flex-col bg-zinc-50 flex-shrink-0">
+            <div class="p-4 border-b">
+                <h2 class="text-sm font-semibold text-zinc-500 uppercase tracking-wider">Members</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-3 space-y-1">
+
+                <!-- Everyone (Broadcast) -->
+                <button onclick="selectRecipient(null, 'Everyone')"
+                        id="recipient-btn-null"
+                        class="recipient-btn w-full flex items-center gap-3 px-3 py-2 rounded-2xl text-left transition hover:bg-white active-recipient">
+                    <div class="w-9 h-9 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-users text-sm"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-zinc-800">Everyone</p>
+                        <p class="text-xs text-zinc-400">Broadcast to all</p>
+                    </div>
+                    <span id="badge-null" class="hidden bg-indigo-600 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1"></span>
+                </button>
+
+                <!-- Individual Members -->
+                {% for user in users %}
+                <button onclick="selectRecipient({{ user.id }}, '{{ user.get_full_name|default:user.username }}')"
+                        id="recipient-btn-{{ user.id }}"
+                        class="recipient-btn w-full flex items-center gap-3 px-3 py-2 rounded-2xl text-left transition hover:bg-white">
+                    <div class="w-9 h-9 bg-zinc-200 text-zinc-600 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold">
+                        {{ user.username|first|upper }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-zinc-800">{{ user.get_full_name|default:user.username }}</p>
+                        <p class="text-xs text-zinc-400">@{{ user.username }}</p>
+                    </div>
+                    <span id="badge-{{ user.id }}" class="hidden bg-indigo-600 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1"></span>
+                </button>
+                {% endfor %}
+
+                <!-- GROUPS SECTION -->
+                <div class="mt-4 pt-3 border-t border-zinc-200">
+                    <div class="flex items-center justify-between px-1 mb-2">
+                        <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Groups</span>
+                        {% if can_create_group %}
+                        <button onclick="openCreateGroupModal()"
+                                class="w-6 h-6 flex items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition text-sm font-bold"
+                                title="Create new group">+</button>
+                        {% endif %}
+                    </div>
+                    <div id="group-list" class="space-y-1">
+                        {% for group in my_groups %}
+                        <button onclick="selectGroup({{ group.id }}, '{{ group.name|escapejs }}')"
+                                id="group-btn-{{ group.id }}"
+                                class="group-btn w-full flex items-center gap-3 px-3 py-2 rounded-2xl text-left transition hover:bg-white">
+                            <div class="w-9 h-9 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold">G</div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-zinc-800 truncate">{{ group.name }}</p>
+                                <p class="text-xs text-zinc-400">Group</p>
+                            </div>
+                            <span id="grp-badge-{{ group.id }}" class="hidden bg-amber-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1"></span>
+                        </button>
+                        {% empty %}
+                        <p class="text-xs text-zinc-400 px-3 py-2" id="no-groups-msg">No groups yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RIGHT: Chat Area -->
+        <div class="flex-1 flex flex-col min-w-0">
+
+            <!-- Chat Header -->
+            <div class="px-4 sm:px-6 py-4 border-b flex items-center justify-between bg-white">
+                <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <button onclick="toggleChatSidebar()"
+                            class="md:hidden w-8 h-8 flex items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 hover:bg-zinc-200 transition flex-shrink-0">
+                        <i class="fa-solid fa-users text-sm"></i>
+                    </button>
+                    <div class="flex items-center gap-3 cursor-pointer select-none min-w-0"
+                         id="group-header-clickable"
+                         onclick="toggleGroupMembersPanel()"
+                         title="Click to see group members">
+                        <div class="w-9 h-9 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-users text-sm" id="header-icon"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h1 class="text-lg font-semibold text-zinc-800 hover:text-indigo-600 transition truncate" id="chat-header-name">Everyone</h1>
+                            <p class="text-xs text-zinc-400 truncate" id="chat-header-sub">Broadcast to all members</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-xs text-zinc-300 hidden transition-transform flex-shrink-0" id="header-chevron"></i>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    {% if is_admin or request.user.username|lower == 'manoj' %}
+                    <button id="delete-group-btn" onclick="deleteGroup()"
+                            class="hidden flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-2xl transition text-sm">
+                        <i class="fa-solid fa-trash"></i> Delete Group
+                    </button>
+                    {% else %}
+                    <button id="leave-group-btn" onclick="leaveGroup()"
+                            class="hidden flex items-center gap-2 px-4 py-2 text-orange-500 hover:bg-orange-50 rounded-2xl transition text-sm">
+                        <i class="fa-solid fa-right-from-bracket"></i> Leave
+                    </button>
+                    {% endif %}
+                    {% if is_admin %}
+                    <button onclick="clearAllChat()" id="clear-all-btn"
+                            class="flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-2xl transition text-sm">
+                        <i class="fa-solid fa-trash"></i> Clear All
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Group Members Panel -->
+            <div id="group-members-panel" class="hidden border-b bg-indigo-50 px-6 py-4">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                        <i class="fa-solid fa-users mr-1"></i> Members in this group
+                    </p>
+                    <button onclick="toggleGroupMembersPanel()"
+                            class="text-zinc-400 hover:text-zinc-600 text-xs transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div id="group-members-list" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <!-- Messages -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4"></div>
+
+            <!-- Input -->
+            <div class="border-t p-4 bg-white">
+                <div class="flex gap-3 items-center">
+                    <div class="flex-1 min-w-0 border border-zinc-300 focus-within:border-indigo-500 rounded-3xl px-4 py-2 flex items-center gap-2 transition">
+                        <span class="text-xs text-zinc-400 flex-shrink-0" id="to-label">Everyone</span>
+                        <span class="text-zinc-300 flex-shrink-0">|</span>
+                        <input id="message-input"
+                               type="text"
+                               placeholder="Type a message…"
+                               class="flex-1 min-w-0 outline-none text-sm text-zinc-800 bg-transparent"
+                               onkeydown="if(event.key==='Enter') sendMessage()">
+                    </div>
+                    <button onclick="sendMessage()"
+                            class="bg-indigo-600 text-white px-5 py-3 rounded-2xl hover:bg-indigo-700 transition flex-shrink-0">
+                        <i class="fa-solid fa-paper-plane text-sm"></i>
+                    </button>
+               
+            </div>
+
+        </div>
+         </div>
+
+               
+    </div>
+     <h5 class="text-center text-zinc-400 mt-6">
+                    © 2026 Yuvaasoft &bull; All rights reserved
+     </h5>
+</div>
+
+<!-- Delete Options Popup -->
+<div id="delete-popup"
+     class="hidden fixed z-50 bg-white border border-zinc-200 rounded-2xl shadow-xl p-3 flex flex-col gap-1 w-52">
+    <p class="text-xs text-zinc-400 font-semibold uppercase tracking-wide px-2 mb-1">Delete message</p>
+    <button id="delete-for-me-btn"
+            class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-orange-600 hover:bg-orange-50 transition text-left w-full">
+        <i class="fa-solid fa-user-slash w-4"></i> Delete for me
+    </button>
+    <button id="delete-for-everyone-btn"
+            class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-red-600 hover:bg-red-50 transition text-left w-full">
+        <i class="fa-solid fa-trash w-4"></i> Delete for everyone
+    </button>
+    <button onclick="closeDeletePopup()"
+            class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-zinc-400 hover:bg-zinc-50 transition text-left w-full">
+        <i class="fa-solid fa-xmark w-4"></i> Cancel
+    </button>
+</div>
+<div id="delete-overlay" class="hidden fixed inset-0 z-40" onclick="closeDeletePopup()"></div>
+
+<!-- CREATE GROUP MODAL -->
+<div id="create-group-modal" class="hidden fixed inset-0 flex items-center justify-center" style="z-index:10010;">
+    <div class="absolute inset-0 bg-black/40" onclick="closeCreateGroupModal()"></div>
+    <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 p-6 z-10">
+        <h2 class="text-lg font-semibold text-zinc-800 mb-4">👥 Create Group Chat</h2>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-zinc-600 mb-1">Group Name <span class="text-red-500">*</span></label>
+            <input type="text" id="group-name-input"
+                   class="w-full border border-zinc-300 focus:border-indigo-500 rounded-2xl px-4 py-2.5 text-sm outline-none"
+                   placeholder="e.g. Design Team">
+        </div>
+        <div class="mb-2">
+            <label class="block text-sm font-medium text-zinc-600 mb-1">Add Members <span class="text-red-500">*</span></label>
+            <input type="text" id="member-search-input"
+                   class="w-full border border-zinc-300 focus:border-indigo-500 rounded-2xl px-4 py-2.5 text-sm outline-none mb-2"
+                   placeholder="Search members…"
+                   oninput="filterMembers(this.value)">
+        </div>
+        <div id="member-picker-list"
+             class="border border-zinc-200 rounded-2xl p-2 max-h-48 overflow-y-auto space-y-1 mb-3">
+            <p class="text-sm text-zinc-400 px-2 py-1">Loading members…</p>
+        </div>
+        <div id="selected-members-preview" class="flex flex-wrap gap-1 mb-3 min-h-[24px]"></div>
+        <p id="group-create-error" class="text-red-500 text-xs mb-3 hidden"></p>
+        <div class="flex gap-3 justify-end">
+            <button onclick="closeCreateGroupModal()"
+                    class="px-5 py-2.5 rounded-2xl text-sm text-zinc-600 hover:bg-zinc-100 transition">Cancel</button>
+            <button onclick="confirmCreateGroup()"
+                    class="px-5 py-2.5 rounded-2xl text-sm bg-indigo-600 text-white hover:bg-indigo-700 transition font-medium">Create Group</button>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Group Confirm Modal -->
+<div id="leave-confirm-modal" class="hidden fixed inset-0 flex items-center justify-center" style="z-index:10010;">
+    <div class="absolute inset-0 bg-black/40" onclick="cancelLeaveGroup()"></div>
+    <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm mx-4 p-6 z-10 text-center">
+        <div class="w-14 h-14 bg-orange-100 text-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-right-from-bracket text-2xl"></i>
+        </div>
+        <h2 class="text-lg font-semibold text-zinc-800 mb-1">Leave Group?</h2>
+        <p class="text-sm text-zinc-500 mb-6">
+            Are you sure you want to leave <span class="font-semibold text-zinc-700" id="leave-group-name"></span>?<br>
+            You won't be able to see messages unless someone adds you back.
+        </p>
+        <div class="flex gap-3">
+            <button onclick="cancelLeaveGroup()"
+                    class="flex-1 px-4 py-2.5 rounded-2xl border border-zinc-200 text-sm text-zinc-600 hover:bg-zinc-50 transition font-medium">Cancel</button>
+            <button onclick="confirmLeaveGroup()"
+                    class="flex-1 px-4 py-2.5 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition">
+                <i class="fa-solid fa-right-from-bracket mr-1"></i> Leave Group
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Group Confirm Modal -->
+<div id="delete-group-confirm-modal" class="hidden fixed inset-0 flex items-center justify-center" style="z-index:10010;">
+    <div class="absolute inset-0 bg-black/40" onclick="cancelDeleteGroup()"></div>
+    <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm mx-4 p-6 z-10 text-center">
+        <div class="w-14 h-14 bg-red-100 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-trash text-2xl"></i>
+        </div>
+        <h2 class="text-lg font-semibold text-zinc-800 mb-1">Delete Group?</h2>
+        <p class="text-sm text-zinc-500 mb-6">
+            Are you sure you want to permanently delete <span class="font-semibold text-zinc-700" id="delete-group-name"></span>?<br>
+            This will remove the group and all its messages for <strong>everyone</strong>. This cannot be undone.
+        </p>
+        <div class="flex gap-3">
+            <button onclick="cancelDeleteGroup()"
+                    class="flex-1 px-4 py-2.5 rounded-2xl border border-zinc-200 text-sm text-zinc-600 hover:bg-zinc-50 transition font-medium">Cancel</button>
+            <button onclick="confirmDeleteGroup()"
+                    class="flex-1 px-4 py-2.5 rounded-2xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition">
+                <i class="fa-solid fa-trash mr-1"></i> Delete Group
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Clear All Chat Confirm Modal -->
+<div id="clear-all-confirm-modal" class="hidden fixed inset-0 flex items-center justify-center" style="z-index:10010;">
+    <div class="absolute inset-0 bg-black/40" onclick="cancelClearAll()"></div>
+    <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm mx-4 p-6 z-10 text-center">
+        <div class="w-14 h-14 bg-red-100 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-trash text-2xl"></i>
+        </div>
+        <h2 class="text-lg font-semibold text-zinc-800 mb-1">Clear All Chat?</h2>
+        <p class="text-sm text-zinc-500 mb-6">
+            This will hide all messages in this conversation for you only. Other members will still see them.
+        </p>
+        <div class="flex gap-3">
+            <button onclick="cancelClearAll()"
+                    class="flex-1 px-4 py-2.5 rounded-2xl border border-zinc-200 text-sm text-zinc-600 hover:bg-zinc-50 transition font-medium">Cancel</button>
+            <button onclick="confirmClearAll()"
+                    class="flex-1 px-4 py-2.5 rounded-2xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition">
+                <i class="fa-solid fa-trash mr-1"></i> Clear All
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Django → JS bridge: injects user IDs needed by chat.js for badge polling -->
+<script>
+    const CHAT_USER_IDS = [{% for user in users %}{{ user.id }},{% endfor %}];
+</script>
+
+<script src="{% static 'js/chat.js' %}"></script>
+
+{% endblock %}

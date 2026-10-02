@@ -1,0 +1,130 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In — TaskFlow</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="{% static 'css/login.css' %}">
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { primary: "#4f46e5" } } }
+    };
+  </script>
+</head>
+
+<body class="bg-zinc-100 font-sans min-h-screen flex flex-col lg:flex-row">
+
+  <!-- MOBILE TOP BANNER (visible only on < lg) -->
+  <div class="lg:hidden bg-zinc-900 px-6 py-6 flex items-center gap-3">
+    <div class="w-9 h-9 bg-primary rounded-xl flex items-center justify-center font-bold text-base text-white flex-shrink-0">
+      T
+    </div>
+    <div>
+      <span class="text-base font-semibold text-white">TaskFlow</span>
+      <p class="text-xs text-zinc-400 mt-0.5">Manage work, your way.</p>
+    </div>
+  </div>
+
+  <!-- LEFT PANEL — desktop only -->
+  <div class="hidden lg:flex w-1/2 bg-zinc-900 flex-col justify-between p-12">
+
+    <!-- Logo -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center font-bold text-lg text-white">
+        T
+      </div>
+      <span class="text-lg font-semibold text-white">TaskFlow</span>
+    </div>
+
+    <!-- Centre copy -->
+    <div>
+      <h1 class="text-4xl font-semibold text-white leading-snug mb-4">
+        Manage work,<br>
+        <span class="text-indigo-400">your way.</span>
+      </h1>
+      <p class="text-zinc-400 text-sm leading-relaxed max-w-sm">
+        Track projects, collaborate with your team, and ship faster — all in one place.
+      </p>
+    </div>
+
+    <!-- Footer branding -->
+    <p class="text-zinc-600 text-xs">
+      Powered by <span class="text-indigo-400 font-medium">Yuvaasoft</span>
+    </p>
+
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="flex-1 flex items-center justify-center p-4 sm:p-6 py-8">
+
+    <div class="bg-white rounded-2xl shadow-sm border border-zinc-100 w-full max-w-sm p-6 sm:p-8">
+
+      <!-- Header -->
+      <div class="mb-8">
+        <h2 class="text-2xl font-semibold text-zinc-800">Welcome back</h2>
+        <p class="text-sm text-zinc-400 mt-1">Sign in to your TaskFlow account</p>
+      </div>
+
+      <!-- Error -->
+      {% if form.errors %}
+      <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-6">
+        <i class="fa-solid fa-circle-exclamation text-red-500 text-sm mt-0.5"></i>
+        <p class="text-sm text-red-600">Invalid username or password. Please try again.</p>
+      </div>
+      {% endif %}
+
+      <form method="POST" action="{% url 'login' %}">
+        {% csrf_token %}
+
+        <!-- Username -->
+        <div class="mb-5">
+          <label class="block text-sm font-medium text-zinc-700 mb-1.5" for="id_username">
+            Username
+          </label>
+          <div class="relative">
+            <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-sm pointer-events-none"></i>
+            <input type="text" id="id_username" name="username"
+                   value="{{ form.username.value|default:'' }}"
+                   placeholder="Enter your username"
+                   autocomplete="username" required
+                   class="w-full pl-10 pr-4 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-800 bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:bg-white transition">
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-zinc-700 mb-1.5" for="id_password">
+            Password
+          </label>
+          <div class="relative">
+            <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-sm pointer-events-none"></i>
+            <input type="password" id="id_password" name="password"
+                   placeholder="Enter your password"
+                   autocomplete="current-password" required
+                   class="w-full pl-10 pr-10 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-800 bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:bg-white transition">
+            <button type="button" id="togglePw"
+                    class="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-indigo-600 transition text-sm">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit"
+                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm py-2.5 rounded-xl transition shadow">
+          Sign in
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+  <script src="{% static 'js/login.js' %}"></script>
+
+</body>
+</html>

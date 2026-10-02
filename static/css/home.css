@@ -1,0 +1,274 @@
+/* ════════════════════════════════════════
+   HOME.CSS — Dashboard / project detail modal styles
+════════════════════════════════════════ */
+
+/* ── Modal pop animation ── */
+@keyframes modalPop {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* ── Project detail overlay (full-screen backdrop) ── */
+#project-detail-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* ── Project detail modal panel ── */
+#project-detail-modal {
+    background: #fff;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 680px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 20px 16px 20px;
+    position: relative;
+    animation: modalPop 0.2s ease;
+}
+
+/* Responsive padding on larger screens */
+@media (min-width: 640px) {
+    #project-detail-modal {
+        border-radius: 16px;
+        padding: 32px;
+    }
+}
+
+/* ── Close button inside the modal ── */
+.modal-close-btn {
+    position: sticky;
+    top: 0;
+    float: right;
+    margin-bottom: 12px;
+    background: #f4f4f5;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #71717a;
+}
+/* ════════════════════════════════════════
+   RESPONSIVE FIXES — HOME PAGE
+════════════════════════════════════════ */
+
+/* ---------- TABLETS ---------- */
+@media (max-width: 1024px) {
+
+    #projects-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .project-card-item {
+        padding: 20px !important;
+    }
+
+    .project-card-item h4 {
+        font-size: 18px !important;
+        word-break: break-word;
+    }
+}
+
+
+/* ---------- MOBILE ---------- */
+@media (max-width: 768px) {
+
+    /* Page spacing */
+    .max-w-7xl,
+    .max-w-6xl,
+    .max-w-5xl {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    /* Greeting section */
+    h1.text-2xl,
+    h1.text-3xl {
+        font-size: 24px !important;
+        line-height: 1.3 !important;
+    }
+
+    /* Overview cards */
+    .grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-5 {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    /* Project grid */
+    #projects-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+
+    .project-card-item {
+        padding: 18px !important;
+        border-radius: 24px !important;
+        overflow: hidden;
+    }
+
+    /* Prevent text overflow */
+    .project-card-item h4,
+    .project-card-item p,
+    .project-card-item span,
+    .project-card-item a {
+        word-break: break-word;
+    }
+
+    /* Filters row */
+    .flex.items-center.gap-2.overflow-x-auto {
+        overflow-x: auto !important;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding-bottom: 4px;
+    }
+
+    .flex.items-center.gap-2.overflow-x-auto::-webkit-scrollbar {
+        display: none;
+    }
+
+    #filter-status,
+    #filter-priority,
+    #filter-sort {
+        min-width: 150px;
+    }
+
+    /* Modal overlay */
+    #project-detail-overlay {
+        padding: 10px !important;
+        align-items: flex-end !important;
+    }
+
+    /* Modal */
+    #project-detail-modal {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 92vh !important;
+        border-radius: 24px 24px 0 0 !important;
+        padding: 20px 14px 24px !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Modal title */
+    #project-detail-body h2 {
+        font-size: 20px !important;
+        line-height: 1.4 !important;
+        word-break: break-word;
+    }
+
+    /* Modal top section */
+    #project-detail-body > div:first-child {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+
+    /* Open board button */
+    #project-detail-body a[href*="kanban"] {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+
+    /* Due + Members section */
+    #project-detail-body div[style*="display:flex;flex-wrap:wrap;gap:12px"] {
+        flex-direction: column !important;
+    }
+
+    /* Member chips */
+    #project-detail-body span {
+        max-width: 100%;
+        word-break: break-word;
+    }
+
+    /* Attachment buttons */
+    #project-detail-body a[target="_blank"] {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Bottom action buttons */
+    #project-detail-body button,
+    #project-detail-body a {
+        word-break: break-word;
+    }
+
+    /* Admin actions */
+    #project-detail-body div[style*="justify-content:flex-end"] {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    #project-detail-body div[style*="justify-content:flex-end"] a,
+    #project-detail-body div[style*="justify-content:flex-end"] button {
+        width: 100% !important;
+        text-align: center !important;
+    }
+
+    /* Close button */
+    .modal-close-btn {
+        position: absolute !important;
+        right: 12px;
+        top: 12px;
+        z-index: 50;
+    }
+}
+
+
+/* ---------- SMALL MOBILE ---------- */
+@media (max-width: 480px) {
+
+    /* Smaller cards */
+    .project-card-item {
+        padding: 16px !important;
+    }
+
+    .project-card-item h4 {
+        font-size: 17px !important;
+    }
+
+    /* Stats cards */
+    .grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-5 {
+        gap: 10px !important;
+    }
+
+    /* Modal */
+    #project-detail-modal {
+        padding: 18px 12px 20px !important;
+    }
+
+    #project-detail-body h2 {
+        font-size: 18px !important;
+    }
+
+    /* Badge wrapping */
+    #project-detail-body div[style*="flex-wrap:wrap"] {
+        row-gap: 8px !important;
+    }
+
+    /* Members chip spacing */
+    #project-detail-body span[style*="display:inline-flex"] {
+        width: 100%;
+    }
+
+    /* Attachment buttons */
+    #project-detail-body a[target="_blank"] {
+        width: 100%;
+        justify-content: center;
+    }
+}

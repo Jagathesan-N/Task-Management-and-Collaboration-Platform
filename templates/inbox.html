@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inbox - TaskFlow{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/inbox.css' %}">
+
+<div class="inbox-wrap max-w-2xl mx-auto">
+
+  <!-- Header -->
+  <div class="mb-8 flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="inbox-title text-3xl font-bold text-zinc-900 tracking-tight">Inbox</h1>
+      <p class="text-zinc-400 mt-1 text-sm">Your notifications and updates</p>
+    </div>
+    {% if notifications %}
+    <span class="badge">
+      <i class="fa-solid fa-bell fa-xs"></i>
+      {{ notifications|length }} unread
+    </span>
+    {% endif %}
+  </div>
+
+  {% if notifications %}
+  <p class="section-label">Recent</p>
+  {% endif %}
+
+  <!-- Notification List -->
+  <div id="notification-list" class="flex flex-col gap-3">
+
+    {% if notifications %}
+      {% for notification in notifications %}
+      <div id="notif-{{ notification.id }}"
+           class="notif-card unread"
+           style="animation-delay: {{ forloop.counter0 }}00ms">
+
+        <!-- Icon -->
+        {% if 'assigned' in notification.message %}
+          <div class="notif-icon icon-blue"><i class="fa-solid fa-user-check"></i></div>
+        {% elif 'added' in notification.message %}
+          <div class="notif-icon icon-green"><i class="fa-solid fa-folder-plus"></i></div>
+        {% else %}
+          <div class="notif-icon icon-amber"><i class="fa-solid fa-bell"></i></div>
+        {% endif %}
+
+        <!-- Content -->
+        <div class="flex-1 min-w-0">
+          <p class="notif-msg">{{ notification.message }}</p>
+          <p class="time-label">
+            <i class="fa-regular fa-clock fa-xs mr-1"></i>
+            {{ notification.created_at|timesince }} ago
+          </p>
+        </div>
+
+        <!-- Action -->
+        <button onclick="markAsRead({{ notification.id }})" class="mark-btn">
+          ✓ Done
+        </button>
+
+      </div>
+      {% endfor %}
+
+    {% else %}
+      <div id="empty-state" class="empty-box">
+        <div class="empty-icon-wrap">
+          <i class="fa-solid fa-inbox"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-zinc-400">All caught up</h3>
+        <p class="text-zinc-400 text-sm mt-2 max-w-xs mx-auto leading-relaxed">
+          When someone assigns you a task or adds you to a project, you'll see it here.
+        </p>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- Django injects initial notification IDs for inbox.js -->
+<script>
+  const shownIds = new Set([
+    {% for notification in notifications %}{{ notification.id }},{% endfor %}
+  ]);
+  const csrfToken = '{{ csrf_token }}';
+</script>
+
+<script src="{% static 'js/inbox.js' %}"></script>
+
+{% endblock %}

@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- TOP GREETING -->
+<div class="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+    <div>
+        <h1 class="text-2xl sm:text-3xl font-semibold">
+            Welcome back, {{ user.get_full_name|default:user.username }}
+        </h1>
+        <p class="text-sm text-zinc-500 mt-1">
+            Stay productive and track your progress
+        </p>
+    </div>
+
+    {% if is_admin %}
+    <a href="{% url 'project_create' %}"
+       class="self-start sm:self-auto px-4 py-2 bg-indigo-600 text-white rounded-xl shadow text-sm whitespace-nowrap">
+        + New Project
+    </a>
+    {% endif %}
+</div>
+
+<!-- TABS -->
+<div class="flex gap-3 mb-6">
+    <button class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm shadow">
+        My Activity
+    </button>
+</div>
+
+<!-- OVERVIEW + COMPLETION -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+
+    <!-- PROJECT OVERVIEW -->
+    <div class="lg:col-span-2 bg-white p-4 sm:p-6 rounded-2xl shadow">
+        <h3 class="font-semibold mb-4">Projects Overview</h3>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 text-center">
+
+            <div class="bg-zinc-50 p-3 sm:p-5 rounded-xl">
+                <p class="text-xs sm:text-sm text-zinc-500">Total Projects</p>
+                <h2 class="text-2xl sm:text-3xl font-semibold text-zinc-800 mt-2">{{ total_projects }}</h2>
+            </div>
+
+            <div class="bg-amber-50 p-3 sm:p-5 rounded-xl">
+                <p class="text-xs sm:text-sm text-amber-600">To Do</p>
+                <h2 class="text-2xl sm:text-3xl font-semibold text-amber-700 mt-2">{{ yet_to_start_projects }}</h2>
+            </div>
+
+            <div class="bg-blue-50 p-3 sm:p-5 rounded-xl">
+                <p class="text-xs sm:text-sm text-blue-600">In Progress</p>
+                <h2 class="text-2xl sm:text-3xl font-semibold text-blue-700 mt-2">{{ in_progress_projects }}</h2>
+            </div>
+
+            <div class="bg-orange-50 p-3 sm:p-5 rounded-xl">
+                <p class="text-xs sm:text-sm text-orange-600">In Review</p>
+                <h2 class="text-2xl sm:text-3xl font-semibold text-orange-700 mt-2">{{ in_review_projects }}</h2>
+            </div>
+
+            <div class="bg-emerald-50 p-3 sm:p-5 rounded-xl col-span-2 sm:col-span-1">
+                <p class="text-xs sm:text-sm text-emerald-600">Completed</p>
+                <h2 class="text-2xl sm:text-3xl font-semibold text-emerald-700 mt-2">{{ completed_projects }}</h2>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- PROJECT COMPLETION RATE -->
+    <div class="bg-white p-4 sm:p-6 rounded-2xl shadow">
+        <h3 class="font-semibold mb-4">Project Completion Rate</h3>
+        <div class="w-full bg-zinc-200 h-2 rounded-full mb-2">
+            <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500"
+                 style="width: {{ completion_rate }}%"></div>
+        </div>
+        <p class="text-right text-sm font-medium text-zinc-700">{{ completion_rate }}%</p>
+        <p class="text-xs text-zinc-400 mt-1 text-right">{{ completed_projects }} of {{ total_projects }} projects completed</p>
+    </div>
+
+</div>
+
+<!-- MY PROJECTS -->
+<div class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <h3 class="font-semibold">My Projects</h3>
+
+        <!-- Filter & Sort controls -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 flex-nowrap sm:flex-wrap">
+
+            <select id="filter-status" onchange="applyFilters()"
+                    class="text-sm border border-zinc-200 rounded-xl px-3 py-1.5 bg-white text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-300 flex-shrink-0">
+                <option value="">All Status</option>
+                <option value="yet_to_start">🟡 Yet to Start</option>
+                <option value="on_hold">🔵 In Progress</option>
+                <option value="in_review">🟠 In Review</option>
+                <option value="completed">🟢 Completed</option>
+            </select>
+
+            <select id="filter-priority" onchange="applyFilters()"
+                    class="text-sm border border-zinc-200 rounded-xl px-3 py-1.5 bg-white text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-300 flex-shrink-0">
+                <option value="">All Priority</option>
+                <option value="high">🔴 High</option>
+                <option value="medium">🟡 Medium</option>
+                <option value="low">🟢 Low</option>
+            </select>
+
+            <select id="filter-sort" onchange="applyFilters()"
+                    class="text-sm border border-zinc-200 rounded-xl px-3 py-1.5 bg-white text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-300 flex-shrink-0">
+                <option value="">Sort By</option>
+                <option value="name-asc">Name A→Z</option>
+                <option value="name-desc">Name Z→A</option>
+                <option value="due-asc">Due Date ↑</option>
+                <option value="due-desc">Due Date ↓</option>
+                <option value="members-desc">Most Members</option>
+            </select>
+
+            <button onclick="clearFilters()"
+                    class="text-xs text-zinc-400 hover:text-zinc-600 px-2 py-1.5 rounded-xl hover:bg-zinc-100 transition flex-shrink-0">
+                ✕ Clear
+            </button>
+        </div>
+    </div>
+
+    <div id="no-results" class="hidden bg-white p-8 rounded-3xl text-center text-zinc-400 mb-4">
+        No projects match the selected filters.
+    </div>
+
+    <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {% for project in projects %}
+
+        <div class="project-card-item bg-white p-6 rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 border border-zinc-100 cursor-pointer"
+             data-status="{{ project.status }}"
+             data-priority="{{ project.priority|default:'' }}"
+             data-name="{{ project.name|lower }}"
+             data-due="{{ project.due_date|date:'Y-m-d'|default:'' }}"
+             data-members="{{ project.members.count }}"
+             ondblclick="openProjectModal(this)">
+
+            <!-- Hidden data used by the modal -->
+            <div class="modal-data" style="display:none;"
+                 data-title="{{ project.name }}"
+                 data-description="{{ project.description|default:'No description provided'|escapejs }}"
+                 data-status="{{ project.status }}"
+                 data-priority="{{ project.priority|default:'' }}"
+                 data-due="{{ project.due_date|date:'d M Y'|default:'' }}"
+                 data-members-count="{{ project.members.count }}"
+                 data-kanban-url="{% url 'kanban_board' project.pk %}"
+                 {% if is_admin %}
+                 data-edit-url="{% url 'project_edit' project.pk %}"
+                 data-project-id="{{ project.pk }}"
+                 data-is-admin="true"
+                 {% endif %}
+            ></div>
+            <div class="modal-members-data" style="display:none;">{% for member in project.members.all %}{{ member.get_full_name|default:member.username }}{% if not forloop.last %}|||{% endif %}{% endfor %}</div>
+            <div class="modal-docs-data" style="display:none;">{% for doc in project.documents.all %}{{ doc.file.url }}:::{{ doc.file.name|slice:"19:" }}{% if not forloop.last %}|||{% endif %}{% endfor %}</div>
+
+            <h4 class="font-semibold text-xl mb-2">
+                <a href="{% url 'kanban_board' project.pk %}"
+                   onclick="event.stopPropagation()"
+                   class="hover:text-indigo-600 transition-colors">
+                    {{ project.name }}
+                </a>
+            </h4>
+
+            <p class="text-sm text-zinc-500 mb-5 line-clamp-2 min-h-[42px]">
+                {{ project.description|default:"No description provided" }}
+            </p>
+
+            <!-- Status Badge -->
+            <div class="mb-3">
+                {% if project.status == 'yet_to_start' %}
+                    <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium bg-amber-100 text-amber-700 rounded-2xl">
+                        🟡 Yet to Start
+                    </span>
+                {% elif project.status == 'on_hold' %}
+                    <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-2xl">
+                        🔵 In Progress
+                    </span>
+                {% elif project.status == 'in_review' %}
+                    <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded-2xl">
+                        🟠 In Review
+                    </span>
+                {% elif project.status == 'completed' %}
+                    <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-2xl">
+                        🟢 Completed
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- Priority Badge -->
+            {% if project.priority %}
+            <div class="mb-4">
+                <span class="inline-block text-xs font-semibold px-3 py-1 rounded-full
+                    {% if project.priority == 'high' %}bg-red-100 text-red-600
+                    {% elif project.priority == 'medium' %}bg-amber-100 text-amber-600
+                    {% else %}bg-green-100 text-green-600{% endif %}">
+                    {{ project.priority|upper }}
+                </span>
+            </div>
+            {% endif %}
+
+            {% if project.due_date %}
+            <div class="flex items-center gap-2 text-xs text-zinc-500 mb-4">
+                <span class="text-amber-500">📅</span>
+                <span>Due: <strong>{{ project.due_date|date:"d M Y" }}</strong></span>
+            </div>
+            {% endif %}
+
+            <!-- Members -->
+            <div class="mb-4">
+                <div class="flex items-center gap-2 text-xs text-zinc-500 mb-2">
+                    <span class="text-blue-500">👥</span>
+                    <span><strong>{{ project.members.count }}</strong> member{{ project.members.count|pluralize }}</span>
+                </div>
+                {% if project.members.count > 0 %}
+                <div class="flex flex-wrap gap-1 mt-1">
+                    {% for member in project.members.all %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+                        {{ member.get_full_name|default:member.username }}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Documents -->
+            {% if project.documents.all %}
+            <div class="mb-4 flex flex-wrap gap-1">
+                {% for doc in project.documents.all %}
+                <a href="{{ doc.file.url }}" target="_blank"
+                   onclick="event.stopPropagation()"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    </svg>
+                    {{ doc.file.name|slice:"19:" }}
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if is_admin %}
+            <div class="flex justify-end gap-5 pt-4 border-t border-zinc-100">
+                <a href="{% url 'project_edit' project.pk %}"
+                   onclick="event.stopPropagation()"
+                   class="text-indigo-600 hover:text-indigo-700 text-sm font-medium transition">
+                    ✏️ Edit
+                </a>
+
+                <button
+                    data-id="{{ project.pk }}"
+                    data-name="{{ project.name }}"
+                    onclick="event.stopPropagation(); openDeleteModal(this)"
+                    class="text-red-600 hover:text-red-700 text-sm font-medium transition">
+                    🗑️ Delete
+                </button>
+            </div>
+            {% endif %}
+
+        </div>
+
+        {% empty %}
+        <div class="col-span-full bg-white p-12 rounded-3xl text-center">
+            <p class="text-zinc-400 text-lg">No projects yet.</p>
+            <p class="text-zinc-500 mt-2">Create your first project to get started!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+<!-- PROJECT DETAIL MODAL -->
+<div id="project-detail-overlay"
+     onclick="if(event.target===this) closeProjectModal()">
+    <div id="project-detail-modal">
+        <button class="modal-close-btn" onclick="closeProjectModal()">✕</button>
+        <div id="project-detail-body" style="clear:both;"></div>
+    </div>
+</div>
+
+<!-- Link page-specific styles and scripts -->
+<link rel="stylesheet" href="{% static 'css/home.css' %}" />
+<script src="{% static 'js/home.js' %}"></script>
+
+{% endblock %}

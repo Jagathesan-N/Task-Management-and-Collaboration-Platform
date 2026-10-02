@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create New Project{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/project_form.css' %}">
+
+<div class="min-h-screen flex items-center justify-center bg-zinc-50 px-4">
+
+    <div class="w-full max-w-2xl">
+
+        <!-- Header -->
+        <div class="text-center mb-6 sm:mb-8">
+            <h1 class="text-2xl sm:text-3xl font-semibold text-zinc-800">Create New Project</h1>
+            <p class="text-zinc-500 mt-1 text-sm">Fill in the details and set priority</p>
+        </div>
+
+        <!-- Card -->
+        <div class="bg-white rounded-2xl shadow-md border border-zinc-200 p-4 sm:p-8">
+
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Name -->
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 mb-1">Name</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.name.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 mb-1">Description</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.description.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Members -->
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 mb-2">Assign Members</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-40 overflow-y-auto border border-zinc-300 rounded-xl p-3">
+                        {% for user in form.members.field.queryset %}
+                            <label class="flex items-center gap-2 cursor-pointer text-sm hover:bg-zinc-50 p-2 rounded-lg">
+                                <input type="checkbox"
+                                       name="members"
+                                       value="{{ user.id }}"
+                                       class="accent-blue-600 w-4 h-4"
+                                       {% if form.members.value and user.id|stringformat:"s" in form.members.value %}checked{% endif %}>
+                                <span class="text-zinc-700">{{ user.username }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    <p class="text-xs text-zinc-400 mt-1">Select one or more team members</p>
+                    {% if form.members.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.members.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 mb-1">Status</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.status.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Dates -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 mb-1">Start Date</label>
+                        {{ form.start_date }}
+                        {% if form.start_date.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.start_date.errors.as_text }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 mb-1">Due Date</label>
+                        {{ form.due_date }}
+                        {% if form.due_date.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.due_date.errors.as_text }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Priority -->
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 mb-2">Priority</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        {% for value, label in form.priority.field.choices %}
+                            <label class="cursor-pointer">
+                                <input type="radio"
+                                       name="priority"
+                                       value="{{ value }}"
+                                       class="peer hidden"
+                                       {% if form.priority.value == value %}checked{% endif %}>
+                                <div class="py-2 rounded-xl text-center text-sm font-medium border-2 transition-all
+                                    {% if value == 'high' %}border-red-300 hover:border-red-500 peer-checked:border-red-600 peer-checked:bg-red-50 text-red-600{% endif %}
+                                    {% if value == 'medium' %}border-yellow-300 hover:border-yellow-500 peer-checked:border-yellow-600 peer-checked:bg-yellow-50 text-yellow-600{% endif %}
+                                    {% if value == 'low' %}border-green-300 hover:border-green-500 peer-checked:border-green-600 peer-checked:bg-green-50 text-green-600{% endif %}">
+                                    {{ label }}
+                                </div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Documents -->
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 mb-1">Attach Documents</label>
+
+                    <label for="doc-upload" class="flex items-center gap-3 cursor-pointer border-2 border-dashed border-zinc-300 hover:border-blue-400 rounded-xl p-4 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-zinc-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828L18 9.828A4 4 0 1012.172 4L5.586 10.586a6 6 0 108.485 8.485L20 13" />
+                        </svg>
+                        <span class="text-sm text-zinc-500 flex-1">Click to upload one or more files</span>
+                        <input type="file"
+                               name="documents"
+                               id="doc-upload"
+                               class="hidden"
+                               multiple
+                               onchange="onFilesSelected(this)">
+                    </label>
+
+                    <!-- Selected files list -->
+                    <ul id="file-list" class="mt-2 space-y-1"></ul>
+
+                    <!-- Existing files (edit mode) -->
+                    {% if project and project.documents.all %}
+                        <div class="mt-3 space-y-1">
+                            <p class="text-xs text-zinc-400 font-medium">Already uploaded:</p>
+                            {% for doc in project.documents.all %}
+                            <div class="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-1.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <a href="{{ doc.file.url }}" target="_blank" class="text-xs text-blue-600 hover:underline truncate">
+                                    {{ doc.file.name|slice:"19:" }}
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Footer -->
+                <div class="flex items-center justify-between pt-6 border-t border-zinc-200">
+                    <a href="{% url 'home' %}" class="text-sm text-zinc-500 hover:text-zinc-700">
+                        ← Back
+                    </a>
+                    <button type="submit"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition">
+                        Create Project
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/project_form.js' %}"></script>
+
+{% endblock %}
